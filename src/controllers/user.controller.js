@@ -21,9 +21,10 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const avatarLocalPath = req.files?.avatar[0]?.path;
+  // const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
   if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar File is Required");
+    throw new ApiError(400, "Avatar File is Not found");
   }
 
   let coverImageLocalPath;
@@ -31,15 +32,16 @@ const registerUser = asyncHandler(async (req, res) => {
   if (
     req.files &&
     Array.isArray(req.files.coverImage) &&
-    req.files.coverImage.lenght > 0
+    req.files.coverImage.length > 0
   ) {
     coverImageLocalPath = req.files.coverImage[0].path;
   }
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
+
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
   if (!avatar) {
-    throw new ApiError(400, "avatar file is required");
+    throw new ApiError(400, "avatar file is required to upload");
   }
 
   const user = await User.create({
@@ -51,7 +53,7 @@ const registerUser = asyncHandler(async (req, res) => {
     username: username.toLowerCase(),
   });
 
-  const createdUser = await User.findBy(user._id).select(
+  const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
 
@@ -60,6 +62,6 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   return res
     .status(201)
-    .json(new ApiResponse(200, "user Registered Successfully"));
+    .json(new ApiResponse(200, createdUser, "user Registered Successfully"));
 });
 export { registerUser };
